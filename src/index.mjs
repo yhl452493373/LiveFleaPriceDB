@@ -1,7 +1,7 @@
 import * as fs from 'fs';
-import { Readable } from 'stream';
-import { finished } from 'stream/promises';
-import { request, gql } from 'graphql-request'
+import {Readable} from 'stream';
+import {finished} from 'stream/promises';
+import {request, gql} from 'graphql-request'
 
 /**
  * Configuration
@@ -29,25 +29,39 @@ const query = gql`
 
 const main = (async () => {
     // Fetch data
-    if (!DEBUG)
-    {
+    if (!DEBUG) {
         const tarkovDevPrices = await request('https://api.tarkov.dev/graphql', query);
         fs.writeFileSync('tarkovdevprices.json', JSON.stringify(tarkovDevPrices, null, 4));
 
         // Fetch the latest prices.json and handbook.json from SPT-AKI's git repo
-        if (!fs.existsSync('akihandbook.json')) {
-		    await downloadFile('https://dev.sp-tarkov.com/SPT-AKI/Server/raw/branch/master/project/assets/database/templates/handbook.json', 'akihandbook.json');
+        let akiOnline = process.argv[2];
+        if (akiOnline != null && akiOnline.indexOf('=') !== -1) {
+            akiOnline = akiOnline.split('=')[1].toLowerCase() === 'true';
         }
-        if (!fs.existsSync('akiitems.json')) {
+        if (akiOnline || !fs.existsSync('akihandbook.json')) {
+            console.log('File akihandbook.json not exists, downloading online...');
+            await downloadFile('https://dev.sp-tarkov.com/SPT-AKI/Server/raw/branch/master/project/assets/database/templates/handbook.json', 'akihandbook.json');
+            console.log('Downloading akihandbook.json success.');
+        } else {
+            console.log('File akihandbook.json exists.If you want to update it online, please run: node src/index.mjs --aki-online');
+        }
+        if (akiOnline || !fs.existsSync('akiitems.json')) {
+            console.log('File akiitems.json not exists, Downloading online...');
             await downloadFile('https://dev.sp-tarkov.com/SPT-AKI/Server/raw/branch/master/project/assets/database/templates/items.json', 'akiitems.json');
+            console.log('Downloading akiitems.json success.');
+        } else {
+            console.log('File akiitems.json exists.If you want to update it online, please run: node src/index.mjs --aki-online');
         }
-        if (!fs.existsSync('akiprices.json')) {
+        if (akiOnline || !fs.existsSync('akiprices.json')) {
+            console.log('File akiprices.json not exists, Downloading online...');
             await downloadFile('https://dev.sp-tarkov.com/SPT-AKI/Server/raw/branch/master/project/assets/database/templates/prices.json', 'akiprices.json');
+            console.log('Downloading akiprices.json success.');
+        } else {
+            console.log('File akiprices.json exists.If you want to update it online, please run: node src/index.mjs --aki-online');
         }
     }
 
     processData();
-    setInterval(processData,3600);
 });
 
 const processData = (() => {
@@ -65,25 +79,21 @@ const processData = (() => {
     const filteredTarkovDevPrices = processTarkovDevPrices(tarkovDevPrices);
 
     // Get a price for each item in the items list
-    for (const itemId in filteredTarkovDevPrices)
-    {
+    for (const itemId in filteredTarkovDevPrices) {
         const itemPrice = filteredTarkovDevPrices[itemId];
-        if (itemPrice.Average7DaysPrice !== 0)
-        {
+        if (itemPrice.Average7DaysPrice !== 0) {
             priceList[itemId] = itemPrice.Average7DaysPrice;
         }
     }
 
     // Ammo packs are easy to exploit, they're never listed on flea which causes server to use handbook price, often contain ammo worth x100 the cost of handbook price
     const ammoPacks = Object.values(akiItems)
-    .filter(x => (x._parent === "5661632d4bdc2d903d8b456b" || x._parent === "543be5cb4bdc2deb348b4568")
-        && (x._name.includes("item_ammo_box_") || x._name.includes("ammo_box_"))
-        && !x._name.includes("_damaged"));
+        .filter(x => (x._parent === "5661632d4bdc2d903d8b456b" || x._parent === "543be5cb4bdc2deb348b4568")
+            && (x._name.includes("item_ammo_box_") || x._name.includes("ammo_box_"))
+            && !x._name.includes("_damaged"));
 
-    for (const ammoPack of ammoPacks)
-    {
-        if (!priceList[ammoPack._id])
-        {
+    for (const ammoPack of ammoPacks) {
+        if (!priceList[ammoPack._id]) {
             if (DEBUG) console.info(`edge case ammo pack ${ammoPack._id} ${ammoPack._name} not found in prices, adding manually`);
             // get price of item to multiply price of
             const itemMultipler = ammoPack._props.StackSlots[0]._max_count;
@@ -96,11 +106,9 @@ const processData = (() => {
     }
 
     // Some items dont get listed on flea often, manually add prices for these
-    for (const specialCaseId of Object.keys(specialCases))
-    {
+    for (const specialCaseId of Object.keys(specialCases)) {
         const specialCasePrice = specialCases[specialCaseId];
-        if (!priceList[specialCaseId])
-        {
+        if (!priceList[specialCaseId]) {
             if (DEBUG) console.info(`edge case item ${specialCaseId} not found in prices, adding manually`);
             priceList[specialCaseId] = specialCasePrice;
         }
@@ -114,35 +122,29 @@ const processData = (() => {
 const processTarkovDevPrices = ((tarkovDevPrices) => {
     const filteredTarkovDevPrices = {};
 
-    for (const item of tarkovDevPrices.items)
-    {
+    for (const item of tarkovDevPrices.items) {
         // For some reason, tarkov.dev is sending back invalid items, exclude them
-        if (!item.id.match(/^[a-fA-F0-9]+$/))
-        {
+        if (!item.id.match(/^[a-fA-F0-9]+$/)) {
             if (DEBUG) console.warn(`Skipping invalid item ${item.id}`);
             continue;
         }
 
-        if (item.historicalPrices.length === 0)
-        {
+        if (item.historicalPrices.length === 0) {
             if (DEBUG) console.error(`unable to add item ${item.id} ${item.name} with no historical prices, ignoring`);
             continue;
         }
 
-        if (item.changeLast48hPercent > 100)
-        {
+        if (item.changeLast48hPercent > 100) {
             console.warn(`Item ${item.id} ${item.name} Has had recent ${item.changeLast48hPercent}% increase in price. ${item.historicalPrices.length} price values`);
         }
 
         const averagedItemPrice = getAveragedPrice(item);
-        if (averagedItemPrice === 0)
-        {
+        if (averagedItemPrice === 0) {
             if (DEBUG) console.error(`unable to add item ${item.id} ${item.name} with average price of 0, ignoring`);
             continue;
         }
 
-        if (item.name.indexOf(" (0/") >= 0)
-        {
+        if (item.name.indexOf(" (0/") >= 0) {
             if (DEBUG) console.warn(`Skipping 0 durability item: ${item.id} ${item.name}`);
             continue;
         }
@@ -163,14 +165,12 @@ const processTarkovDevPrices = ((tarkovDevPrices) => {
 const getAveragedPrice = ((item) => {
     const fourteenDaysAgoTimestamp = new Date(Date.now() - 12096e5);
     let filteredPrices = item.historicalPrices.filter(x => x.timestamp > fourteenDaysAgoTimestamp).sort((a, b) => a.price - b.price);
-    
-    if (filteredPrices.length === 0)
-    {
+
+    if (filteredPrices.length === 0) {
         filteredPrices = item.historicalPrices;
     }
 
-    if (filteredPrices.length === 1)
-    {
+    if (filteredPrices.length === 1) {
         return 0;
     }
 
@@ -188,17 +188,16 @@ const getAveragedPrice = ((item) => {
 
 const getItemPrice = ((priceList, handbookItems, itemTpl) => {
     const fleaPrice = priceList[itemTpl];
-    if (!fleaPrice)
-    {
+    if (!fleaPrice) {
         return handbookItems.find(x => x.Id === itemTpl).Price;
     }
     return fleaPrice;
 });
 
 const downloadFile = (async (url, filename) => {
-  const res = await fetch(url);
-  const fileStream = fs.createWriteStream(filename, { flags: 'w' });
-  await finished(Readable.fromWeb(res.body).pipe(fileStream));
+    const res = await fetch(url);
+    const fileStream = fs.createWriteStream(filename, {flags: 'w'});
+    await finished(Readable.fromWeb(res.body).pipe(fileStream));
 });
 
 const getStandardDeviation = ((array) => {
