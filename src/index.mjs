@@ -43,21 +43,21 @@ const main = (async () => {
             await downloadFile('https://dev.sp-tarkov.com/SPT-AKI/Server/raw/branch/master/project/assets/database/templates/handbook.json', 'akihandbook.json');
             console.log('Downloading akihandbook.json success.');
         } else {
-            console.log('File akihandbook.json exists.If you want to update it online, please run: node src/index.mjs --aki-online');
+            console.log('File akihandbook.json exists.If you want to update it online, please run: node src/index.mjs --aki-online=true');
         }
         if (akiOnline || !fs.existsSync('akiitems.json')) {
             console.log('File akiitems.json not exists, Downloading online...');
             await downloadFile('https://dev.sp-tarkov.com/SPT-AKI/Server/raw/branch/master/project/assets/database/templates/items.json', 'akiitems.json');
             console.log('Downloading akiitems.json success.');
         } else {
-            console.log('File akiitems.json exists.If you want to update it online, please run: node src/index.mjs --aki-online');
+            console.log('File akiitems.json exists.If you want to update it online, please run: node src/index.mjs --aki-online=true');
         }
         if (akiOnline || !fs.existsSync('akiprices.json')) {
             console.log('File akiprices.json not exists, Downloading online...');
             await downloadFile('https://dev.sp-tarkov.com/SPT-AKI/Server/raw/branch/master/project/assets/database/templates/prices.json', 'akiprices.json');
             console.log('Downloading akiprices.json success.');
         } else {
-            console.log('File akiprices.json exists.If you want to update it online, please run: node src/index.mjs --aki-online');
+            console.log('File akiprices.json exists.If you want to update it online, please run: node src/index.mjs --aki-online=true');
         }
     }
 
