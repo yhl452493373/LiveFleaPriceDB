@@ -34,7 +34,7 @@ jobs:
           token: ${{ github.token }}
           repository: ${{ github.repository }}
           retain_days: 1
-          keep_minimum_runs: 5
+          keep_minimum_runs: 1
           delete_workflow_by_state_pattern: deleted, disabled_fork, disabled_inactivity, disabled_manually
 
                 
