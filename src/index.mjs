@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import {Readable} from 'stream';
 import {finished} from 'stream/promises';
-import {request, gql} from 'graphql-request'
+import {request, gql, GraphQLClient} from 'graphql-request'
 
 /**
  * Configuration
@@ -30,7 +30,9 @@ const query = gql`
 const main = (async () => {
     // Fetch data
     if (!DEBUG) {
-        const tarkovDevPrices = await request('https://api.tarkov.dev/graphql', query);
+        const endpoint = 'https://api.tarkov.dev/graphql'
+        const client = new GraphQLClient(endpoint, { errorPolicy: 'ignore' })
+        const tarkovDevPrices =await client.request(query)
         fs.writeFileSync('tarkovdevprices.json', JSON.stringify(tarkovDevPrices, null, 4));
 
         // Fetch the latest prices.json and handbook.json from SPT-AKI's git repo
