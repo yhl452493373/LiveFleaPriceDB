@@ -3,7 +3,7 @@
 on:
   workflow_dispatch: 
   schedule:
-    - cron: '0 */2 * * *' # Runs every 2 hour
+    - cron: '0 * * * *' # Runs every 1 hour
 
 jobs:
   fetch_data:
