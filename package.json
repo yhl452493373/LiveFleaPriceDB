@@ -4,7 +4,7 @@
   "description": "SPT live flea price DB updater",
   "main": "src/index.mjs",
   "scripts": {
-    "fetch": "node src/index.mjs --aki-online=true --aki-branch=3.9.0-DEV"
+    "fetch": "node src/index.mjs --aki-online=false --aki-branch=3.9.0-DEV"
   },
   "repository": {
     "type": "git",
