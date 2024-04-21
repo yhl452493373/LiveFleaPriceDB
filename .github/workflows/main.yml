@@ -25,7 +25,7 @@ jobs:
         uses: EndBug/add-and-commit@v9
         with:
           default_author: github_actions
-          add: 'prices.json tarkovdevprices.json'
+          add: 'prices.json'
           message: 'Update prices'
 
       - name: Delete workflow runs
