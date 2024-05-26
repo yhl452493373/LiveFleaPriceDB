@@ -47,21 +47,21 @@ const main = (async () => {
 
         if (akiOnline || !fs.existsSync('akihandbook.json')) {
             console.log('File akihandbook.json not exists, downloading online...');
-            await downloadFile('https://dev.sp-tarkov.com/SPT-AKI/Server/raw/branch/' + akiBranch + '/project/assets/database/templates/handbook.json', 'akihandbook.json');
+            await downloadFile('https://dev.sp-tarkov.com/SPT/Server/raw/branch/' + akiBranch + '/project/assets/database/templates/handbook.json', 'akihandbook.json');
             console.log('Downloading akihandbook.json success.');
         } else {
             console.log('File akihandbook.json exists.If you want to update it online, please run: node src/index.mjs --aki-online=true --aki-branch=master');
         }
         if (akiOnline || !fs.existsSync('akiitems.json')) {
             console.log('File akiitems.json not exists, Downloading online...');
-            await downloadFile('https://dev.sp-tarkov.com/SPT-AKI/Server/raw/branch/' + akiBranch + '/project/assets/database/templates/items.json', 'akiitems.json');
+            await downloadFile('https://dev.sp-tarkov.com/SPT/Server/raw/branch/' + akiBranch + '/project/assets/database/templates/items.json', 'akiitems.json');
             console.log('Downloading akiitems.json success.');
         } else {
             console.log('File akiitems.json exists.If you want to update it online, please run: node src/index.mjs --aki-online=true --aki-branch=master');
         }
         if (akiOnline || !fs.existsSync('akiprices.json')) {
             console.log('File akiprices.json not exists, Downloading online...');
-            await downloadFile('https://dev.sp-tarkov.com/SPT-AKI/Server/raw/branch/' + akiBranch + '/project/assets/database/templates/prices.json', 'akiprices.json');
+            await downloadFile('https://dev.sp-tarkov.com/SPT/Server/raw/branch/' + akiBranch + '/project/assets/database/templates/prices.json', 'akiprices.json');
             console.log('Downloading akiprices.json success.');
         } else {
             console.log('File akiprices.json exists.If you want to update it online, please run: node src/index.mjs --aki-online=true --aki-branch=master');
